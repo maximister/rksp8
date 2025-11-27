@@ -1,0 +1,59 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native  # Используем локальную файловую систему по умолчанию
+  cloud:
+    config:
+      server:
+        native:
+          # Поиск конфигов в папке config-repo проекта
+          search-locations: file:./config-repo,classpath:/config-repo
+        # Для работы с Git раскомментируйте секцию ниже и закомментируйте native
+        # git:
+        #   uri: https://github.com/your-username/rksp8
+        #   search-paths: config-repo
+        #   clone-on-start: true
+        #   default-label: main
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+
+---
+# Git профиль (для продакшена)
+spring:
+  config:
+    activate:
+      on-profile: git
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/your-username/rksp8
+          search-paths: config-repo
+          clone-on-start: true
+          default-label: main
+          # Для приватного репозитория добавьте:
+          # username: your-username
+          # password: your-token
+

@@ -1,0 +1,61 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # Роут к Auth Server для получения токенов
+        - id: auth-server
+          uri: lb://auth-server
+          predicates:
+            - Path=/oauth2/**,/login/**,/.well-known/**
+        # Роут к Parking Service
+        - id: parking-service
+          uri: lb://parking-service
+          predicates:
+            - Path=/api/parking/**
+          filters:
+            - StripPrefix=2
+            - TokenRelay=
+        # Роут к Vehicle Service
+        - id: vehicle-service
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicles/**
+          filters:
+            - StripPrefix=2
+            - TokenRelay=
+        # Роут к Reservation Service
+        - id: reservation-service
+          uri: lb://reservation-service
+          predicates:
+            - Path=/api/reservations/**
+          filters:
+            - StripPrefix=2
+            - TokenRelay=
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST,PUT,DELETE
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+

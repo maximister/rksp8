@@ -32,8 +32,8 @@ class VehicleServiceTest {
 
     @BeforeEach
     void setUp() {
-        vehicle1 = new Vehicle(1L, "А123БВ", "Toyota Camry", "Black", 1L);
-        vehicle2 = new Vehicle(2L, "В456ГД", "BMW X5", "White", 2L);
+        vehicle1 = new Vehicle(1L, "А123БВ", "Toyota Camry", "Black", "Иван Иванов");
+        vehicle2 = new Vehicle(2L, "В456ГД", "BMW X5", "White", "Петр Петров");
     }
 
     @Test
@@ -61,7 +61,7 @@ class VehicleServiceTest {
 
         // Then
         assertThat(result).isPresent();
-        assertThat(result.get().getPlateNumber()).isEqualTo("А123БВ");
+        assertThat(result.get().getLicensePlate()).isEqualTo("А123БВ");
         verify(vehicleRepository, times(1)).findById(1L);
     }
 
@@ -79,39 +79,39 @@ class VehicleServiceTest {
     }
 
     @Test
-    void getVehicleByPlateNumber_WhenExists_ShouldReturnVehicle() {
+    void getVehicleByLicensePlate_WhenExists_ShouldReturnVehicle() {
         // Given
-        when(vehicleRepository.findByPlateNumber("А123БВ")).thenReturn(Optional.of(vehicle1));
+        when(vehicleRepository.findByLicensePlate("А123БВ")).thenReturn(Optional.of(vehicle1));
 
         // When
-        Optional<Vehicle> result = vehicleService.getVehicleByPlateNumber("А123БВ");
+        Optional<Vehicle> result = vehicleService.getVehicleByLicensePlate("А123БВ");
 
         // Then
         assertThat(result).isPresent();
-        assertThat(result.get().getPlateNumber()).isEqualTo("А123БВ");
-        verify(vehicleRepository, times(1)).findByPlateNumber("А123БВ");
+        assertThat(result.get().getLicensePlate()).isEqualTo("А123БВ");
+        verify(vehicleRepository, times(1)).findByLicensePlate("А123БВ");
     }
 
     @Test
-    void getVehiclesByOwnerId_ShouldReturnOwnerVehicles() {
+    void getVehiclesByOwnerName_ShouldReturnOwnerVehicles() {
         // Given
         List<Vehicle> ownerVehicles = Arrays.asList(vehicle1);
-        when(vehicleRepository.findByOwnerId(1L)).thenReturn(ownerVehicles);
+        when(vehicleRepository.findByOwnerName("Иван Иванов")).thenReturn(ownerVehicles);
 
         // When
-        List<Vehicle> result = vehicleService.getVehiclesByOwnerId(1L);
+        List<Vehicle> result = vehicleService.getVehiclesByOwnerName("Иван Иванов");
 
         // Then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getOwnerId()).isEqualTo(1L);
-        verify(vehicleRepository, times(1)).findByOwnerId(1L);
+        assertThat(result.get(0).getOwnerName()).isEqualTo("Иван Иванов");
+        verify(vehicleRepository, times(1)).findByOwnerName("Иван Иванов");
     }
 
     @Test
     void createVehicle_ShouldSaveAndReturnVehicle() {
         // Given
-        Vehicle newVehicle = new Vehicle(null, "С789ЕЖ", "Mercedes C-Class", "Silver", 3L);
-        Vehicle savedVehicle = new Vehicle(3L, "С789ЕЖ", "Mercedes C-Class", "Silver", 3L);
+        Vehicle newVehicle = new Vehicle(null, "С789ЕЖ", "Mercedes C-Class", "Silver", "Сергей Сергеев");
+        Vehicle savedVehicle = new Vehicle(3L, "С789ЕЖ", "Mercedes C-Class", "Silver", "Сергей Сергеев");
         when(vehicleRepository.save(any(Vehicle.class))).thenReturn(savedVehicle);
 
         // When
@@ -119,14 +119,14 @@ class VehicleServiceTest {
 
         // Then
         assertThat(result.getId()).isEqualTo(3L);
-        assertThat(result.getPlateNumber()).isEqualTo("С789ЕЖ");
+        assertThat(result.getLicensePlate()).isEqualTo("С789ЕЖ");
         verify(vehicleRepository, times(1)).save(any(Vehicle.class));
     }
 
     @Test
     void updateVehicle_WhenExists_ShouldUpdateAndReturn() {
         // Given
-        Vehicle updatedDetails = new Vehicle(null, "А123БВ", "Toyota Camry 2024", "Black", 1L);
+        Vehicle updatedDetails = new Vehicle(null, "А123БВ", "Toyota Camry 2024", "Black", "Иван Иванов");
         when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle1));
         when(vehicleRepository.save(any(Vehicle.class))).thenReturn(vehicle1);
 
@@ -142,7 +142,7 @@ class VehicleServiceTest {
     @Test
     void updateVehicle_WhenNotExists_ShouldThrowException() {
         // Given
-        Vehicle updatedDetails = new Vehicle(null, "А123БВ", "Toyota Camry 2024", "Black", 1L);
+        Vehicle updatedDetails = new Vehicle(null, "А123БВ", "Toyota Camry 2024", "Black", "IVAN");
         when(vehicleRepository.findById(999L)).thenReturn(Optional.empty());
 
         // When & Then

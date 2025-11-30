@@ -51,8 +51,8 @@ public class ReservationService {
     }
 
     public Reservation createReservation(Reservation reservation) {
-        // Обновляем статус парковочного места на RESERVED
-        parkingServiceClient.updateParkingSpotStatus(reservation.getParkingSpotId(), "RESERVED");
+        // Обновляем статус парковочного места на OCCUPIED
+        parkingServiceClient.updateParkingSpotStatus(reservation.getParkingSpotId(), "OCCUPIED");
         reservation.setStatus("ACTIVE");
         return reservationRepository.save(reservation);
     }

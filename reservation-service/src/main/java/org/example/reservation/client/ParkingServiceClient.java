@@ -10,7 +10,7 @@ public interface ParkingServiceClient {
     @GetMapping("/spots/{id}")
     ParkingSpotDTO getParkingSpot(@PathVariable Long id);
     
-    @PatchMapping("/spots/{id}/status")
+    @PutMapping("/spots/{id}/status")
     ParkingSpotDTO updateParkingSpotStatus(@PathVariable Long id, @RequestParam String status);
 }
 

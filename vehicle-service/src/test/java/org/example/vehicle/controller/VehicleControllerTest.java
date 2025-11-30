@@ -43,8 +43,8 @@ class VehicleControllerTest {
 
     @BeforeEach
     void setUp() {
-        vehicle1 = new Vehicle(1L, "А123БВ", "Toyota Camry", "Black", 1L);
-        vehicle2 = new Vehicle(2L, "В456ГД", "BMW X5", "White", 2L);
+        vehicle1 = new Vehicle(1L, "А123БВ", "Toyota Camry", "Black", "Иван Иванов");
+        vehicle2 = new Vehicle(2L, "В456ГД", "BMW X5", "White", "Петр Петров");
     }
 
     @Test
@@ -57,8 +57,8 @@ class VehicleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].plateNumber").value("А123БВ"))
-                .andExpect(jsonPath("$[1].plateNumber").value("В456ГД"));
+                .andExpect(jsonPath("$[0].licensePlate").value("А123БВ"))
+                .andExpect(jsonPath("$[1].licensePlate").value("В456ГД"));
 
         verify(vehicleService, times(1)).getAllVehicles();
     }
@@ -72,7 +72,7 @@ class VehicleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.plateNumber").value("А123БВ"))
+                .andExpect(jsonPath("$.licensePlate").value("А123БВ"))
                 .andExpect(jsonPath("$.model").value("Toyota Camry"));
 
         verify(vehicleService, times(1)).getVehicleById(1L);
@@ -91,35 +91,35 @@ class VehicleControllerTest {
 
     @Test
     @WithMockUser
-    void getVehicleByPlateNumber_WhenExists_ShouldReturnVehicle() throws Exception {
-        when(vehicleService.getVehicleByPlateNumber("А123БВ")).thenReturn(Optional.of(vehicle1));
+    void getVehicleByLicensePlate_WhenExists_ShouldReturnVehicle() throws Exception {
+        when(vehicleService.getVehicleByLicensePlate("А123БВ")).thenReturn(Optional.of(vehicle1));
 
         mockMvc.perform(get("/vehicles/plate/А123БВ"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.plateNumber").value("А123БВ"));
+                .andExpect(jsonPath("$.licensePlate").value("А123БВ"));
 
-        verify(vehicleService, times(1)).getVehicleByPlateNumber("А123БВ");
+        verify(vehicleService, times(1)).getVehicleByLicensePlate("А123БВ");
     }
 
     @Test
     @WithMockUser
-    void getVehiclesByOwnerId_ShouldReturnOwnerVehicles() throws Exception {
+    void getVehiclesByOwnerName_ShouldReturnOwnerVehicles() throws Exception {
         List<Vehicle> ownerVehicles = Arrays.asList(vehicle1);
-        when(vehicleService.getVehiclesByOwnerId(1L)).thenReturn(ownerVehicles);
+        when(vehicleService.getVehiclesByOwnerName("Иван Иванов")).thenReturn(ownerVehicles);
 
-        mockMvc.perform(get("/vehicles/owner/1"))
+        mockMvc.perform(get("/vehicles/owner/Иван Иванов"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].ownerId").value(1));
+                .andExpect(jsonPath("$[0].ownerName").value("Иван Иванов"));
 
-        verify(vehicleService, times(1)).getVehiclesByOwnerId(1L);
+        verify(vehicleService, times(1)).getVehiclesByOwnerName("Иван Иванов");
     }
 
     @Test
     @WithMockUser
     void createVehicle_ShouldReturnCreatedVehicle() throws Exception {
-        Vehicle newVehicle = new Vehicle(null, "С789ЕЖ", "Mercedes C-Class", "Silver", 3L);
-        Vehicle savedVehicle = new Vehicle(3L, "С789ЕЖ", "Mercedes C-Class", "Silver", 3L);
+        Vehicle newVehicle = new Vehicle(null, "С789ЕЖ", "Mercedes C-Class", "Silver", "Сергей Сергеев");
+        Vehicle savedVehicle = new Vehicle(3L, "С789ЕЖ", "Mercedes C-Class", "Silver", "Сергей Сергеев");
         
         when(vehicleService.createVehicle(any(Vehicle.class))).thenReturn(savedVehicle);
 
@@ -129,7 +129,7 @@ class VehicleControllerTest {
                         .content(objectMapper.writeValueAsString(newVehicle)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(3))
-                .andExpect(jsonPath("$.plateNumber").value("С789ЕЖ"));
+                .andExpect(jsonPath("$.licensePlate").value("С789ЕЖ"));
 
         verify(vehicleService, times(1)).createVehicle(any(Vehicle.class));
     }
@@ -137,7 +137,7 @@ class VehicleControllerTest {
     @Test
     @WithMockUser
     void updateVehicle_ShouldReturnUpdatedVehicle() throws Exception {
-        Vehicle updatedVehicle = new Vehicle(1L, "А123БВ", "Toyota Camry 2024", "Black", 1L);
+        Vehicle updatedVehicle = new Vehicle(1L, "А123БВ", "Toyota Camry 2024", "Black", "Иван Иванов");
         
         when(vehicleService.updateVehicle(eq(1L), any(Vehicle.class))).thenReturn(updatedVehicle);
 

@@ -1,0 +1,10 @@
+# Быстрый Dockerfile - использует локально собранный JAR
+FROM --platform=linux/amd64 eclipse-temurin:17-jre
+
+WORKDIR /app
+
+# Копируем готовый JAR файл
+COPY target/*.jar app.jar
+
+# Запускаем приложение
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -114,12 +114,22 @@ curl -H "Authorization: Bearer $TOKEN" \
 - `reservation-service/src/test/java/` (32 теста)
 - `TESTS_README.md` - Документация по тестам
 
-### ❌ 10. Файлы для развертывания
-- [ ] Dockerfile для каждого сервиса
-- [ ] docker-compose.yml для всей системы
-- [ ] ИЛИ Kubernetes манифесты
+### ✅ 10. Файлы для развертывания
+- [x] Dockerfile для каждого сервиса (7 файлов)
+- [x] docker-compose.yml для всей системы
+- [x] .dockerignore для оптимизации
+- [x] Multi-stage build для минимизации образов
 
-**TODO:** Создать Docker файлы!
+**Файлы:**
+- `eureka-server/Dockerfile`
+- `config-server/Dockerfile`
+- `auth-server/Dockerfile`
+- `api-gateway/Dockerfile`
+- `parking-service/Dockerfile`
+- `vehicle-service/Dockerfile`
+- `reservation-service/Dockerfile`
+- `docker-compose.yml`
+- `DOCKER_README.md` - Документация
 
 ### ❌ 11. Развертывание в облаке
 - [ ] Yandex Cloud или VK Cloud
@@ -127,7 +137,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 **TODO:** Развернуть в облаке!
 
-## 📊 Прогресс: 9/11 (82%)
+## 📊 Прогресс: 10/11 (91%)
 
 ## 🚀 Что уже работает
 

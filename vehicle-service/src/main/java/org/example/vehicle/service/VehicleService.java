@@ -21,12 +21,12 @@ public class VehicleService {
         return vehicleRepository.findById(id);
     }
 
-    public Optional<Vehicle> getVehicleByPlateNumber(String plateNumber) {
-        return vehicleRepository.findByPlateNumber(plateNumber);
+    public Optional<Vehicle> getVehicleByLicensePlate(String licensePlate) {
+        return vehicleRepository.findByLicensePlate(licensePlate);
     }
 
-    public List<Vehicle> getVehiclesByOwnerId(Long ownerId) {
-        return vehicleRepository.findByOwnerId(ownerId);
+    public List<Vehicle> getVehiclesByOwnerName(String ownerName) {
+        return vehicleRepository.findByOwnerName(ownerName);
     }
 
     public Vehicle createVehicle(Vehicle vehicle) {
@@ -36,10 +36,10 @@ public class VehicleService {
     public Vehicle updateVehicle(Long id, Vehicle vehicleDetails) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found"));
-        vehicle.setPlateNumber(vehicleDetails.getPlateNumber());
+        vehicle.setLicensePlate(vehicleDetails.getLicensePlate());
         vehicle.setModel(vehicleDetails.getModel());
         vehicle.setColor(vehicleDetails.getColor());
-        vehicle.setOwnerId(vehicleDetails.getOwnerId());
+        vehicle.setOwnerName(vehicleDetails.getOwnerName());
         return vehicleRepository.save(vehicle);
     }
 

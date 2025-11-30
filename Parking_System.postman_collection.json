@@ -1,0 +1,581 @@
+{
+  "info": {
+    "name": "Parking Microservices System",
+    "description": "Тестирование микросервисной системы управления парковкой",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Infrastructure",
+      "item": [
+        {
+          "name": "Eureka Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8761",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8761"
+            }
+          }
+        },
+        {
+          "name": "Config Server Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8888/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8888",
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Get Config for Parking Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8888/parking-service/default",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8888",
+              "path": ["parking-service", "default"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. OAuth2 Authentication",
+      "item": [
+        {
+          "name": "Get Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"access_token\", jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "client",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "secret",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:9000/oauth2/token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "9000",
+              "path": ["oauth2", "token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Parking Service",
+      "item": [
+        {
+          "name": "Create Parking Spot",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"parking_spot_id\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spotNumber\": \"A-101\",\n  \"status\": \"AVAILABLE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/parking/api/spots",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["parking", "api", "spots"]
+            }
+          }
+        },
+        {
+          "name": "Get All Parking Spots",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/parking/api/spots",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["parking", "api", "spots"]
+            }
+          }
+        },
+        {
+          "name": "Get Parking Spot by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/parking/api/spots/{{parking_spot_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["parking", "api", "spots", "{{parking_spot_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Parking Spot",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spotNumber\": \"A-101\",\n  \"status\": \"OCCUPIED\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/parking/api/spots/{{parking_spot_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["parking", "api", "spots", "{{parking_spot_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Parking Spot",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/parking/api/spots/{{parking_spot_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["parking", "api", "spots", "{{parking_spot_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Vehicle Service",
+      "item": [
+        {
+          "name": "Create Vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"vehicle_id\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"licensePlate\": \"А123БВ777\",\n  \"model\": \"Toyota Camry\",\n  \"ownerName\": \"Иван Иванов\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/vehicles/api/vehicles",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["vehicles", "api", "vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Get All Vehicles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/vehicles/api/vehicles",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["vehicles", "api", "vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Get Vehicle by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/vehicles/api/vehicles/{{vehicle_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["vehicles", "api", "vehicles", "{{vehicle_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Vehicle",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"licensePlate\": \"А123БВ777\",\n  \"model\": \"Toyota Camry 2024\",\n  \"ownerName\": \"Иван Петрович Иванов\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/vehicles/api/vehicles/{{vehicle_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["vehicles", "api", "vehicles", "{{vehicle_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Vehicle",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/vehicles/api/vehicles/{{vehicle_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["vehicles", "api", "vehicles", "{{vehicle_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Reservation Service",
+      "item": [
+        {
+          "name": "Create Reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"reservation_id\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"parkingSpotId\": {{parking_spot_id}},\n  \"vehicleId\": {{vehicle_id}},\n  \"startTime\": \"2024-12-01T10:00:00\",\n  \"endTime\": \"2024-12-01T18:00:00\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/reservations/api/reservations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["reservations", "api", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "Get All Reservations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/reservations/api/reservations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["reservations", "api", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "Get Reservation Details (Feign Test)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/reservations/api/reservations/{{reservation_id}}/details",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["reservations", "api", "reservations", "{{reservation_id}}", "details"]
+            }
+          }
+        },
+        {
+          "name": "Delete Reservation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/reservations/api/reservations/{{reservation_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["reservations", "api", "reservations", "{{reservation_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Security Tests",
+      "item": [
+        {
+          "name": "Access Without Token (Should Fail)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/parking/api/spots",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["parking", "api", "spots"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "parking_spot_id",
+      "value": ""
+    },
+    {
+      "key": "vehicle_id",
+      "value": ""
+    },
+    {
+      "key": "reservation_id",
+      "value": ""
+    }
+  ]
+}
+

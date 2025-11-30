@@ -6,36 +6,20 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
-/**
- * Конфигурация безопасности для API Gateway
- * 
- * Gateway работает на WebFlux, поэтому используем реактивную конфигурацию
- * Gateway проверяет JWT токен и передаёт его дальше в микросервисы
- */
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        http
+        return http
                 .csrf(csrf -> csrf.disable())
-                .authorizeExchange(exchanges -> exchanges
-                        // Разрешаем доступ к Auth Server без токена
-                        .pathMatchers("/oauth2/**").permitAll()
-                        .pathMatchers("/login/**").permitAll()
-                        // Actuator endpoints
-                        .pathMatchers("/actuator/**").permitAll()
-                        // Все остальные запросы требуют аутентификации
-                        .anyExchange().authenticated()
+                .authorizeExchange(exchange -> exchange
+                        .anyExchange().permitAll() // Разрешаем все, но проверяем токен
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> {})
-                );
-        
-        return http.build();
+                        .jwt(jwt -> {}) // Включаем проверку JWT для TokenRelay
+                )
+                .build();
     }
 }
-
-
-

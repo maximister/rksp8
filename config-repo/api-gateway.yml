@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8090
 
 spring:
   application:
@@ -20,9 +20,9 @@ spring:
         - id: parking-service
           uri: lb://parking-service
           predicates:
-            - Path=/api/parking/**
+            - Path=/api/spots/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
             - TokenRelay=
         # Роут к Vehicle Service
         - id: vehicle-service
@@ -30,7 +30,7 @@ spring:
           predicates:
             - Path=/api/vehicles/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
             - TokenRelay=
         # Роут к Reservation Service
         - id: reservation-service
@@ -38,7 +38,7 @@ spring:
           predicates:
             - Path=/api/reservations/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
             - TokenRelay=
       default-filters:
         - name: Retry

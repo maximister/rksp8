@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления парковкой</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Система управления парковкой</h1>
+            <div class="auth-status" id="authStatus">
+                <span class="status-indicator offline"></span>
+                <span>Не авторизован</span>
+            </div>
+        </header>
+
+        <!-- Login Section -->
+        <div class="login-section" id="loginSection">
+            <div class="card">
+                <h2>Вход в систему</h2>
+                <p class="subtitle">Выберите роль для демонстрации</p>
+                <div class="login-buttons">
+                    <button class="btn btn-primary btn-large" onclick="login('admin')">
+                        Войти как Администратор
+                        <small>Полный доступ (управление парковкой, автомобилями, бронированиями)</small>
+                    </button>
+                    <button class="btn btn-secondary btn-large" onclick="login('user')">
+                        Войти как Пользователь
+                        <small>Управление своими автомобилями и бронированиями</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Application -->
+        <div class="app-section hidden" id="appSection">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('parking')">
+                    Парковочные места
+                </button>
+                <button class="tab-btn" onclick="switchTab('vehicles')">
+                    Автомобили
+                </button>
+                <button class="tab-btn" onclick="switchTab('reservations')">
+                    Бронирования
+                </button>
+            </div>
+
+            <!-- Parking Tab -->
+            <div class="tab-content" id="parkingTab">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Парковочные места</h2>
+                        <button class="btn btn-primary" onclick="showAddParkingModal()" id="addParkingBtn">
+                            + Добавить место
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Номер</th>
+                                    <th>Этаж</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="parkingTableBody">
+                                <tr>
+                                    <td colspan="5" class="loading">Загрузка данных...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicles Tab -->
+            <div class="tab-content hidden" id="vehiclesTab">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Автомобили</h2>
+                        <button class="btn btn-primary" onclick="showAddVehicleModal()" id="addVehicleBtn">
+                            + Добавить автомобиль
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Гос. номер</th>
+                                    <th>Модель</th>
+                                    <th>Цвет</th>
+                                    <th>Владелец</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vehiclesTableBody">
+                                <tr>
+                                    <td colspan="6" class="loading">Загрузка данных...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reservations Tab -->
+            <div class="tab-content hidden" id="reservationsTab">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Бронирования</h2>
+                        <button class="btn btn-primary" onclick="showAddReservationModal()" id="addReservationBtn">
+                            + Создать бронирование
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Парковочное место</th>
+                                    <th>Автомобиль</th>
+                                    <th>Начало</th>
+                                    <th>Окончание</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservationsTableBody">
+                                <tr>
+                                    <td colspan="7" class="loading">Загрузка данных...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="logout-container">
+                <button class="btn btn-outline" onclick="logout()">
+                    Выйти
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Parking Spot -->
+    <div class="modal hidden" id="addParkingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Добавить парковочное место</h3>
+                <button class="close-btn" onclick="closeModal('addParkingModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Номер места</label>
+                    <input type="text" id="parkingNumber" placeholder="A-101" required>
+                </div>
+                <div class="form-group">
+                    <label>Этаж</label>
+                    <input type="number" id="parkingFloor" placeholder="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Статус</label>
+                    <select id="parkingStatus">
+                        <option value="FREE">Свободно</option>
+                        <option value="OCCUPIED">Занято</option>
+                        <option value="RESERVED">Зарезервировано</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addParkingModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="addParkingSpot()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Vehicle -->
+    <div class="modal hidden" id="addVehicleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Добавить автомобиль</h3>
+                <button class="close-btn" onclick="closeModal('addVehicleModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Гос. номер</label>
+                    <input type="text" id="vehicleLicense" placeholder="A123BC77" required>
+                </div>
+                <div class="form-group">
+                    <label>Модель</label>
+                    <input type="text" id="vehicleModel" placeholder="Toyota Camry" required>
+                </div>
+                <div class="form-group">
+                    <label>Цвет</label>
+                    <input type="text" id="vehicleColor" placeholder="Черный" required>
+                </div>
+                <div class="form-group">
+                    <label>Владелец</label>
+                    <input type="text" id="vehicleOwner" placeholder="Иван Иванов" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addVehicleModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="addVehicle()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Reservation -->
+    <div class="modal hidden" id="addReservationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Создать бронирование</h3>
+                <button class="close-btn" onclick="closeModal('addReservationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Парковочное место</label>
+                    <select id="reservationSpot" required>
+                        <option value="">Выберите место...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Автомобиль</label>
+                    <select id="reservationVehicle" required>
+                        <option value="">Выберите автомобиль...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Начало</label>
+                    <input type="datetime-local" id="reservationStart" required>
+                </div>
+                <div class="form-group">
+                    <label>Окончание</label>
+                    <input type="datetime-local" id="reservationEnd" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addReservationModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="addReservation()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Toast for notifications -->
+    <div class="toast hidden" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

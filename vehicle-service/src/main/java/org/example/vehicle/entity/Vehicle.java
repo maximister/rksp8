@@ -15,10 +15,10 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private String plateNumber;
+    private String licensePlate;
     private String model;
     private String color;
-    private Long ownerId;
+    private String ownerName;
 }
 
 

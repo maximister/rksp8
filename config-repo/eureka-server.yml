@@ -14,9 +14,10 @@ eureka:
   server:
     wait-time-in-ms-when-sync-empty: 0
     enable-self-preservation: false
+  instance:
+    hostname: localhost
 
 logging:
   level:
     com.netflix.eureka: INFO
     com.netflix.discovery: INFO
-

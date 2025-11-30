@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Конфигурация безопасности для Reservation Service
@@ -24,13 +25,13 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/reservations/**").hasAuthority("SCOPE_read")
-                        .requestMatchers(HttpMethod.POST, "/reservations/**").hasAuthority("SCOPE_write")
-                        .requestMatchers(HttpMethod.PUT, "/reservations/**").hasAuthority("SCOPE_write")
-                        .requestMatchers(HttpMethod.PATCH, "/reservations/**").hasAuthority("SCOPE_write")
-                        .requestMatchers(HttpMethod.DELETE, "/reservations/**").hasAuthority("SCOPE_write")
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/reservations/**", HttpMethod.GET.name())).hasAuthority("SCOPE_read")
+                        .requestMatchers(new AntPathRequestMatcher("/reservations/**", HttpMethod.POST.name())).hasAuthority("SCOPE_write")
+                        .requestMatchers(new AntPathRequestMatcher("/reservations/**", HttpMethod.PUT.name())).hasAuthority("SCOPE_write")
+                        .requestMatchers(new AntPathRequestMatcher("/reservations/**", HttpMethod.PATCH.name())).hasAuthority("SCOPE_write")
+                        .requestMatchers(new AntPathRequestMatcher("/reservations/**", HttpMethod.DELETE.name())).hasAuthority("SCOPE_write")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -1,0 +1,60 @@
+services:
+  # PostgreSQL Database for Parking Service
+  postgres-parking:
+    image: postgres:15-alpine
+    container_name: postgres-parking
+    environment:
+      POSTGRES_DB: parkingdb
+      POSTGRES_USER: parking_user
+      POSTGRES_PASSWORD: parking_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - parking-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parking_user -d parkingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database for Vehicle Service
+  postgres-vehicle:
+    image: postgres:15-alpine
+    container_name: postgres-vehicle
+    environment:
+      POSTGRES_DB: vehicledb
+      POSTGRES_USER: vehicle_user
+      POSTGRES_PASSWORD: vehicle_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - vehicle-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vehicle_user -d vehicledb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database for Reservation Service
+  postgres-reservation:
+    image: postgres:15-alpine
+    container_name: postgres-reservation
+    environment:
+      POSTGRES_DB: reservationdb
+      POSTGRES_USER: reservation_user
+      POSTGRES_PASSWORD: reservation_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - reservation-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reservation_user -d reservationdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  parking-data:
+  vehicle-data:
+  reservation-data:
+

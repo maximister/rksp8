@@ -26,16 +26,16 @@ public class VehicleController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/plate/{plateNumber}")
-    public ResponseEntity<Vehicle> getVehicleByPlateNumber(@PathVariable String plateNumber) {
-        return vehicleService.getVehicleByPlateNumber(plateNumber)
+    @GetMapping("/plate/{licensePlate}")
+    public ResponseEntity<Vehicle> getVehicleByLicensePlate(@PathVariable String licensePlate) {
+        return vehicleService.getVehicleByLicensePlate(licensePlate)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/owner/{ownerId}")
-    public List<Vehicle> getVehiclesByOwnerId(@PathVariable Long ownerId) {
-        return vehicleService.getVehiclesByOwnerId(ownerId);
+    @GetMapping("/owner/{ownerName}")
+    public List<Vehicle> getVehiclesByOwnerName(@PathVariable String ownerName) {
+        return vehicleService.getVehiclesByOwnerName(ownerName);
     }
 
     @PostMapping

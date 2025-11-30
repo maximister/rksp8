@@ -51,6 +51,11 @@ public class ParkingSpotController {
         return parkingSpotService.updateStatus(id, status);
     }
 
+    @PutMapping("/{id}/status")
+    public ParkingSpot updateStatusPut(@PathVariable Long id, @RequestParam String status) {
+        return parkingSpotService.updateStatus(id, status);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSpot(@PathVariable Long id) {
         parkingSpotService.deleteSpot(id);

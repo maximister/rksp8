@@ -21,10 +21,9 @@ public class User {
     @Column(nullable = false)
     private String password;
     
-    private String role; // USER, ADMIN
+    @Column(nullable = false)
+    private String roles; // Например: "ROLE_USER,ROLE_ADMIN"
     
-    private boolean enabled = true;
+    @Column(nullable = false)
+    private boolean enabled = true; // Изменено на примитивный boolean для правильной генерации isEnabled()
 }
-
-
-

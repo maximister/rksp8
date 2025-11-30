@@ -27,9 +27,9 @@ class VehicleRepositoryTest {
     void setUp() {
         vehicleRepository.deleteAll();
         
-        vehicle1 = new Vehicle(null, "А123БВ", "Toyota Camry", "Black", 1L);
-        vehicle2 = new Vehicle(null, "В456ГД", "BMW X5", "White", 2L);
-        vehicle3 = new Vehicle(null, "С789ЕЖ", "Mercedes C-Class", "Silver", 1L);
+        vehicle1 = new Vehicle(null, "А123БВ", "Toyota Camry", "Black", "Иван Иванов");
+        vehicle2 = new Vehicle(null, "В456ГД", "BMW X5", "White", "Петр Петров");
+        vehicle3 = new Vehicle(null, "С789ЕЖ", "Mercedes C-Class", "Silver", "Иван Иванов");
 
         vehicleRepository.save(vehicle1);
         vehicleRepository.save(vehicle2);
@@ -55,7 +55,7 @@ class VehicleRepositoryTest {
 
         // Then
         assertThat(found).isPresent();
-        assertThat(found.get().getPlateNumber()).isEqualTo("А123БВ");
+        assertThat(found.get().getLicensePlate()).isEqualTo("А123БВ");
     }
 
     @Test
@@ -68,39 +68,39 @@ class VehicleRepositoryTest {
     }
 
     @Test
-    void findByPlateNumber_WhenExists_ShouldReturnVehicle() {
+    void findByLicensePlate_WhenExists_ShouldReturnVehicle() {
         // When
-        Optional<Vehicle> found = vehicleRepository.findByPlateNumber("А123БВ");
+        Optional<Vehicle> found = vehicleRepository.findByLicensePlate("А123БВ");
 
         // Then
         assertThat(found).isPresent();
-        assertThat(found.get().getPlateNumber()).isEqualTo("А123БВ");
+        assertThat(found.get().getLicensePlate()).isEqualTo("А123БВ");
         assertThat(found.get().getModel()).isEqualTo("Toyota Camry");
     }
 
     @Test
-    void findByPlateNumber_WhenNotExists_ShouldReturnEmpty() {
+    void findByLicensePlate_WhenNotExists_ShouldReturnEmpty() {
         // When
-        Optional<Vehicle> found = vehicleRepository.findByPlateNumber("Х999ХХ");
+        Optional<Vehicle> found = vehicleRepository.findByLicensePlate("Х999ХХ");
 
         // Then
         assertThat(found).isEmpty();
     }
 
     @Test
-    void findByOwnerId_ShouldReturnOwnerVehicles() {
+    void findByOwnerName_ShouldReturnOwnerVehicles() {
         // When
-        List<Vehicle> ownerVehicles = vehicleRepository.findByOwnerId(1L);
+        List<Vehicle> ownerVehicles = vehicleRepository.findByOwnerName("Иван Иванов");
 
         // Then
         assertThat(ownerVehicles).hasSize(2);
-        assertThat(ownerVehicles).allMatch(v -> v.getOwnerId().equals(1L));
+        assertThat(ownerVehicles).allMatch(v -> v.getOwnerName().equals("Иван Иванов"));
     }
 
     @Test
-    void findByOwnerId_WhenNoVehicles_ShouldReturnEmpty() {
+    void findByOwnerName_WhenNoVehicles_ShouldReturnEmpty() {
         // When
-        List<Vehicle> ownerVehicles = vehicleRepository.findByOwnerId(999L);
+        List<Vehicle> ownerVehicles = vehicleRepository.findByOwnerName("Неизвестный");
 
         // Then
         assertThat(ownerVehicles).isEmpty();
@@ -109,14 +109,14 @@ class VehicleRepositoryTest {
     @Test
     void save_ShouldPersistNewVehicle() {
         // Given
-        Vehicle newVehicle = new Vehicle(null, "Д111АА", "Audi A4", "Blue", 3L);
+        Vehicle newVehicle = new Vehicle(null, "Д111АА", "Audi A4", "Blue", "Сергей Сергеев");
 
         // When
         Vehicle saved = vehicleRepository.save(newVehicle);
 
         // Then
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getPlateNumber()).isEqualTo("Д111АА");
+        assertThat(saved.getLicensePlate()).isEqualTo("Д111АА");
         assertThat(vehicleRepository.findAll()).hasSize(4);
     }
 

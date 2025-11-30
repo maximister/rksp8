@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Конфигурация безопасности для Parking Service
@@ -25,16 +26,16 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         // H2 Console доступна без авторизации (для отладки)
-                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                         // Actuator endpoints
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/**")).permitAll()
                         // GET запросы доступны с scope "read"
-                        .requestMatchers(HttpMethod.GET, "/spots/**").hasAuthority("SCOPE_read")
+                        .requestMatchers(new AntPathRequestMatcher("/spots/**", HttpMethod.GET.name())).hasAuthority("SCOPE_read")
                         // POST, PUT, DELETE требуют scope "write"
-                        .requestMatchers(HttpMethod.POST, "/spots/**").hasAuthority("SCOPE_write")
-                        .requestMatchers(HttpMethod.PUT, "/spots/**").hasAuthority("SCOPE_write")
-                        .requestMatchers(HttpMethod.PATCH, "/spots/**").hasAuthority("SCOPE_write")
-                        .requestMatchers(HttpMethod.DELETE, "/spots/**").hasAuthority("SCOPE_write")
+                        .requestMatchers(new AntPathRequestMatcher("/spots/**", HttpMethod.POST.name())).hasAuthority("SCOPE_write")
+                        .requestMatchers(new AntPathRequestMatcher("/spots/**", HttpMethod.PUT.name())).hasAuthority("SCOPE_write")
+                        .requestMatchers(new AntPathRequestMatcher("/spots/**", HttpMethod.PATCH.name())).hasAuthority("SCOPE_write")
+                        .requestMatchers(new AntPathRequestMatcher("/spots/**", HttpMethod.DELETE.name())).hasAuthority("SCOPE_write")
                         // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
                 )

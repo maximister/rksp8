@@ -19,10 +19,8 @@ public class GlobalCorsConfig {
     public CorsWebFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // Разрешаем все источники - используем апи applyPermitDefaultValues()
         config.applyPermitDefaultValues();
         
-        // Явно устанавливаем все параметры
         config.setAllowedOrigins(Collections.singletonList("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         config.setAllowedHeaders(Collections.singletonList("*"));

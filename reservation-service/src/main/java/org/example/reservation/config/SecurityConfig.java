@@ -9,10 +9,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-/**
- * Конфигурация безопасности для Reservation Service
- * Сервис работает как OAuth2 Resource Server - проверяет JWT токены
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

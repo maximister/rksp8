@@ -32,7 +32,6 @@ public class ParkingServiceRestClient {
         
         HttpEntity<String> entity = new HttpEntity<>(headers);
         
-        // Используем PUT вместо PATCH
         return restTemplate.exchange(
             url,
             HttpMethod.PUT,

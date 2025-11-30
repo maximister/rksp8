@@ -5,19 +5,17 @@ spring:
   application:
     name: config-server
   profiles:
-    active: native  # Используем локальную файловую систему по умолчанию
+    active: native
   cloud:
     config:
       server:
-        native:
-          # Поиск конфигов в папке config-repo проекта
-          search-locations: file:./config-repo,classpath:/config-repo
-        # Для работы с Git раскомментируйте секцию ниже и закомментируйте native
-        # git:
-        #   uri: https://github.com/your-username/rksp8
-        #   search-paths: config-repo
-        #   clone-on-start: true
-        #   default-label: main
+#        native:
+#          search-locations: file:./config-repo,classpath:/config-repo
+         git:
+           uri: https://github.com/maximister/rksp8
+           search-paths: config-repo
+           clone-on-start: true
+           default-label: main
 
 eureka:
   client:
@@ -40,7 +38,6 @@ logging:
     org.springframework.cloud.config: DEBUG
 
 ---
-# Git профиль (для продакшена)
 spring:
   config:
     activate:
@@ -49,11 +46,8 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/your-username/rksp8
+          uri: https://github.com/maximister/rksp8
           search-paths: config-repo
           clone-on-start: true
           default-label: main
-          # Для приватного репозитория добавьте:
-          # username: your-username
-          # password: your-token
 

@@ -11,12 +11,10 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        # Роут к Auth Server для получения токенов
         - id: auth-server
           uri: lb://auth-server
           predicates:
             - Path=/oauth2/**,/login/**,/.well-known/**
-        # Роут к Parking Service
         - id: parking-service
           uri: lb://parking-service
           predicates:
@@ -24,7 +22,6 @@ spring:
           filters:
             - StripPrefix=1
             - TokenRelay=
-        # Роут к Vehicle Service
         - id: vehicle-service
           uri: lb://vehicle-service
           predicates:
@@ -32,7 +29,6 @@ spring:
           filters:
             - StripPrefix=1
             - TokenRelay=
-        # Роут к Reservation Service
         - id: reservation-service
           uri: lb://reservation-service
           predicates:

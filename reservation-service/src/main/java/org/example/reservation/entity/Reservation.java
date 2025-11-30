@@ -1,11 +1,15 @@
 package org.example.reservation.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations")
@@ -21,7 +25,7 @@ public class Reservation {
     private Long vehicleId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private String status; // ACTIVE, COMPLETED, CANCELLED
+    private String status;
 }
 
 

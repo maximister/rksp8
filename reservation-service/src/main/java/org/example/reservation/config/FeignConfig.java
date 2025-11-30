@@ -9,18 +9,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-/**
- * Конфигурация Feign для передачи JWT токена в межсервисных вызовах
- */
 @Configuration
 public class FeignConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FeignConfig.class);
 
-    /**
-     * Interceptor для передачи JWT токена из текущего запроса
-     * в исходящие Feign-запросы к другим микросервисам
-     */
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {

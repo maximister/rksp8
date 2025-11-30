@@ -51,7 +51,6 @@ public class ReservationService {
     }
 
     public Reservation createReservation(Reservation reservation) {
-        // Обновляем статус парковочного места на OCCUPIED
         parkingServiceClient.updateParkingSpotStatus(reservation.getParkingSpotId(), "OCCUPIED");
         reservation.setStatus("ACTIVE");
         return reservationRepository.save(reservation);
@@ -72,7 +71,6 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
         
-        // Освобождаем парковочное место
         parkingServiceClient.updateParkingSpotStatus(reservation.getParkingSpotId(), "FREE");
         reservation.setStatus("COMPLETED");
         return reservationRepository.save(reservation);
@@ -82,7 +80,6 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
         
-        // Освобождаем парковочное место
         parkingServiceClient.updateParkingSpotStatus(reservation.getParkingSpotId(), "FREE");
         reservation.setStatus("CANCELLED");
         return reservationRepository.save(reservation);

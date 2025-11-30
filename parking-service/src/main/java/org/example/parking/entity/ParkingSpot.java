@@ -1,6 +1,10 @@
 package org.example.parking.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +21,7 @@ public class ParkingSpot {
     
     private String number;
     private Integer floor;
-    private String status; // FREE, OCCUPIED, RESERVED
+    private String status;
 }
 
 

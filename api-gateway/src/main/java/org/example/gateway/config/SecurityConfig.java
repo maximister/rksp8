@@ -15,10 +15,10 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchange -> exchange
-                        .anyExchange().permitAll() // Разрешаем все, но проверяем токен
+                        .anyExchange().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> {}) // Включаем проверку JWT для TokenRelay
+                        .jwt(jwt -> {})
                 )
                 .build();
     }

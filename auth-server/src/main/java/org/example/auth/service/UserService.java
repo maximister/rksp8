@@ -46,14 +46,13 @@ public class UserService implements UserDetailsService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRoles("ROLE_USER"); // По умолчанию обычный пользователь
+        user.setRoles("ROLE_USER");
         user.setEnabled(true);
         
         return userRepository.save(user);
     }
     
     public void initDefaultUsers() {
-        // Создаем дефолтных пользователей, если их нет
         if (!userRepository.existsByUsername("user")) {
             User user = new User();
             user.setUsername("user");

@@ -1,4 +1,3 @@
-# Быстрый Dockerfile - использует локально собранный JAR
 FROM --platform=linux/arm64 eclipse-temurin:17-jre
 
 WORKDIR /app

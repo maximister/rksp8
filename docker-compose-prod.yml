@@ -1,48 +1,54 @@
 services:
   eureka-server:
-    image: ${DOCKER_USER:-maximister}/rksp8-eureka-server:latest
+    image: ${DOCKER_USER}/rksp8-eureka-server:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
     networks:
       - parking-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 30s
+    restart: unless-stopped
 
   config-server:
-    image: ${DOCKER_USER:-maximister}/rksp8-config-server:latest
+    image: ${DOCKER_USER}/rksp8-config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
     environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    volumes:
-      - ./config-repo:/app/config-repo:ro
     depends_on:
       eureka-server:
         condition: service_healthy
     networks:
       - parking-network
+    volumes:
+      - ./config-repo:/config-repo
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 30s
+    restart: unless-stopped
 
   auth-server:
-    image: ${DOCKER_USER:-maximister}/rksp8-auth-server:latest
+    image: ${DOCKER_USER}/rksp8-auth-server:latest
     container_name: auth-server
     ports:
       - "9000:9000"
     environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://${VM_IP}:9000
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -50,6 +56,7 @@ services:
         condition: service_healthy
     networks:
       - parking-network
+    restart: unless-stopped
 
   postgres-parking:
     image: postgres:15-alpine
@@ -66,34 +73,10 @@ services:
       - parking-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U parking_user -d parkingdb"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
-
-  parking-service:
-    image: ${DOCKER_USER:-maximister}/rksp8-parking-service:latest
-    container_name: parking-service
-    ports:
-      - "8081:8081"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
-      - DB_HOST=postgres-parking
-      - DB_PORT=5432
-      - DB_USER=parking_user
-      - DB_PASSWORD=parking_pass
-    depends_on:
-      postgres-parking:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      auth-server:
-        condition: service_started
-    networks:
-      - parking-network
+    restart: unless-stopped
 
   postgres-vehicle:
     image: postgres:15-alpine
@@ -110,35 +93,10 @@ services:
       - parking-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vehicle_user -d vehicledb"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
-
-  vehicle-service:
-    image: ${DOCKER_USER:-maximister}/rksp8-vehicle-service:latest
-    container_name: vehicle-service
-    ports:
-      - "8082:8082"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
-      - DB_HOST=postgres-vehicle
-      - DB_PORT=5432
-      - DB_USER=vehicle_user
-      - DB_PASSWORD=vehicle_pass
-    depends_on:
-      postgres-vehicle:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      auth-server:
-        condition: service_started
-    networks:
-      - parking-network
+    restart: unless-stopped
 
   postgres-reservation:
     image: postgres:15-alpine
@@ -155,20 +113,75 @@ services:
       - parking-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U reservation_user -d reservationdb"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  parking-service:
+    image: ${DOCKER_USER}/rksp8-parking-service:latest
+    container_name: parking-service
+    ports:
+      - "8081:8081"
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://${VM_IP}:9000
+      - DB_HOST=postgres-parking
+      - DB_PORT=5432
+      - DB_USER=parking_user
+      - DB_PASSWORD=parking_pass
+    depends_on:
+      postgres-parking:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      auth-server:
+        condition: service_started
+    networks:
+      - parking-network
+    restart: unless-stopped
+
+  vehicle-service:
+    image: ${DOCKER_USER}/rksp8-vehicle-service:latest
+    container_name: vehicle-service
+    ports:
+      - "8082:8082"
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://${VM_IP}:9000
+      - DB_HOST=postgres-vehicle
+      - DB_PORT=5432
+      - DB_USER=vehicle_user
+      - DB_PASSWORD=vehicle_pass
+    depends_on:
+      postgres-vehicle:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      auth-server:
+        condition: service_started
+    networks:
+      - parking-network
+    restart: unless-stopped
 
   reservation-service:
-    image: ${DOCKER_USER:-maximister}/rksp8-reservation-service:latest
+    image: ${DOCKER_USER}/rksp8-reservation-service:latest
     container_name: reservation-service
     ports:
       - "8083:8083"
     environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://${VM_IP}:9000
       - DB_HOST=postgres-reservation
       - DB_PORT=5432
       - DB_USER=reservation_user
@@ -188,17 +201,18 @@ services:
         condition: service_started
     networks:
       - parking-network
+    restart: unless-stopped
 
   api-gateway:
-    image: ${DOCKER_USER:-maximister}/rksp8-api-gateway:latest
+    image: ${DOCKER_USER}/rksp8-api-gateway:latest
     container_name: api-gateway
     ports:
       - "8090:8090"
     environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://${VM_IP}:9000
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -214,6 +228,7 @@ services:
         condition: service_started
     networks:
       - parking-network
+    restart: unless-stopped
 
 networks:
   parking-network:
@@ -223,3 +238,4 @@ volumes:
   parking-data:
   vehicle-data:
   reservation-data:
+

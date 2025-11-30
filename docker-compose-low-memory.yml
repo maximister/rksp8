@@ -1,61 +1,8 @@
+# Docker Compose для систем с ограниченной памятью (2GB RAM)
+# Использует только H2 (in-memory) базы данных
+# JVM настроен на минимальное потребление памяти
+
 services:
-  # PostgreSQL Database for Parking Service
-  postgres-parking:
-    image: postgres:15-alpine
-    container_name: postgres-parking
-    environment:
-      POSTGRES_DB: parkingdb
-      POSTGRES_USER: parking_user
-      POSTGRES_PASSWORD: parking_pass
-    ports:
-      - "5435:5432"
-    volumes:
-      - parking-data:/var/lib/postgresql/data
-    networks:
-      - parking-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U parking_user -d parkingdb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-  # PostgreSQL Database for Vehicle Service
-  postgres-vehicle:
-    image: postgres:15-alpine
-    container_name: postgres-vehicle
-    environment:
-      POSTGRES_DB: vehicledb
-      POSTGRES_USER: vehicle_user
-      POSTGRES_PASSWORD: vehicle_pass
-    ports:
-      - "5436:5432"
-    volumes:
-      - vehicle-data:/var/lib/postgresql/data
-    networks:
-      - parking-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vehicle_user -d vehicledb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-  # PostgreSQL Database for Reservation Service
-  postgres-reservation:
-    image: postgres:15-alpine
-    container_name: postgres-reservation
-    environment:
-      POSTGRES_DB: reservationdb
-      POSTGRES_USER: reservation_user
-      POSTGRES_PASSWORD: reservation_pass
-    ports:
-      - "5434:5432"
-    volumes:
-      - reservation-data:/var/lib/postgresql/data
-    networks:
-      - parking-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U reservation_user -d reservationdb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
   eureka-server:
     build:
       context: .
@@ -64,15 +11,16 @@ services:
     ports:
       - "8761:8761"
     environment:
-      - JAVA_OPTS=-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100
+      - JAVA_OPTS=-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
     networks:
       - parking-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
-      interval: 15s
+      interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
+
   config-server:
     build:
       context: .
@@ -82,6 +30,9 @@ services:
       - "8888:8888"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_OPTS=-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
+    volumes:
+      - ./config-repo:/app/config-repo:ro
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -89,10 +40,11 @@ services:
       - parking-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
-      interval: 15s
+      interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
+
   auth-server:
     build:
       context: .
@@ -103,6 +55,9 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - JAVA_OPTS=-Xmx384m -Xms192m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:authdb
+      - SPRING_H2_CONSOLE_ENABLED=true
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -110,13 +65,13 @@ services:
         condition: service_healthy
     networks:
       - parking-network
-    # healthcheck временно отключен
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/actuator/health"]
-    #   interval: 15s
-    #   timeout: 5s
-    #   retries: 5
-    #   start_period: 60s
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   parking-service:
     build:
       context: .
@@ -128,26 +83,25 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
-      - DB_HOST=postgres-parking
-      - DB_USER=parking_user
-      - DB_PASSWORD=parking_pass
+      - JAVA_OPTS=-Xmx384m -Xms192m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:parkingdb
+      - SPRING_H2_CONSOLE_ENABLED=true
     depends_on:
-      postgres-parking:
-        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
     networks:
       - parking-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
-      interval: 15s
-      timeout: 5s
+      interval: 20s
+      timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 40s
+
   vehicle-service:
     build:
       context: .
@@ -159,26 +113,25 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
-      - DB_HOST=postgres-vehicle
-      - DB_USER=vehicle_user
-      - DB_PASSWORD=vehicle_pass
+      - JAVA_OPTS=-Xmx384m -Xms192m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:vehicledb
+      - SPRING_H2_CONSOLE_ENABLED=true
     depends_on:
-      postgres-vehicle:
-        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
     networks:
       - parking-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
-      interval: 15s
-      timeout: 5s
+      interval: 20s
+      timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 40s
+
   reservation-service:
     build:
       context: .
@@ -190,18 +143,16 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
-      - DB_HOST=postgres-reservation
-      - DB_USER=reservation_user
-      - DB_PASSWORD=reservation_pass
+      - JAVA_OPTS=-Xmx384m -Xms192m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:reservationdb
+      - SPRING_H2_CONSOLE_ENABLED=true
     depends_on:
-      postgres-reservation:
-        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
       parking-service:
         condition: service_healthy
       vehicle-service:
@@ -210,10 +161,11 @@ services:
       - parking-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8083/actuator/health"]
-      interval: 15s
-      timeout: 5s
+      interval: 20s
+      timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 40s
+
   api-gateway:
     build:
       context: .
@@ -225,13 +177,14 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - JAVA_OPTS=-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication
     depends_on:
       eureka-server:
         condition: service_healthy
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
       parking-service:
         condition: service_healthy
       vehicle-service:
@@ -242,15 +195,12 @@ services:
       - parking-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8090/actuator/health"]
-      interval: 15s
-      timeout: 5s
+      interval: 20s
+      timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 40s
+
 networks:
   parking-network:
     driver: bridge
 
-volumes:
-  parking-data:
-  vehicle-data:
-  reservation-data:

@@ -33,6 +33,17 @@ eureka:
     lease-renewal-interval-in-seconds: 5
     lease-expiration-duration-in-seconds: 10
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  security:
+    enabled: false
+
 logging:
   level:
     org.springframework.security: DEBUG

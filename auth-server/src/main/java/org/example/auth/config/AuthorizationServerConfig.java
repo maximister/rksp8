@@ -5,6 +5,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -57,6 +58,19 @@ public class AuthorizationServerConfig {
      * Конфигурация Authorization Server
      * Обрабатывает OAuth2 endpoints: /oauth2/authorize, /oauth2/token, /oauth2/jwks
      */
+    @Bean
+    @Order(0) // Более высокий приоритет чем authorization server filter chain
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher(new AntPathRequestMatcher("/actuator/**"))
+                .authorizeHttpRequests(authorize -> authorize
+                        .anyRequest().permitAll()
+                )
+                .csrf(csrf -> csrf.disable());
+        
+        return http.build();
+    }
+    
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(
@@ -157,12 +171,13 @@ public class AuthorizationServerConfig {
                 .clientId("parking-client")
                 .clientSecret(passwordEncoder.encode("secret"))
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .authorizationGrantType(AuthorizationGrantType.PASSWORD)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .scope("read")
                 .scope("write")
                 .tokenSettings(TokenSettings.builder()
-                        .accessTokenTimeToLive(Duration.ofMinutes(5))
+                        .accessTokenTimeToLive(Duration.ofMinutes(30))
                         .refreshTokenTimeToLive(Duration.ofHours(1))
                         .build())
                 .build();
@@ -215,9 +230,10 @@ public class AuthorizationServerConfig {
      * Настройки Authorization Server (URL endpoints)
      */
     @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
+    public AuthorizationServerSettings authorizationServerSettings(
+            @Value("${spring.security.oauth2.authorizationserver.issuer:http://localhost:9000}") String issuer) {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:9000")
+                .issuer(issuer)
                 .build();
     }
 

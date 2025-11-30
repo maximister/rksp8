@@ -48,6 +48,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -55,6 +56,25 @@ services:
         condition: service_healthy
     networks:
       - parking-network
+
+  postgres-parking:
+    image: postgres:15-alpine
+    container_name: postgres-parking
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: parkingdb
+      POSTGRES_USER: parking_user
+      POSTGRES_PASSWORD: parking_pass
+    volumes:
+      - parking-data:/var/lib/postgresql/data
+    networks:
+      - parking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parking_user -d parkingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   parking-service:
     build:
@@ -66,8 +86,14 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
+      - DB_HOST=postgres-parking
+      - DB_PORT=5432
+      - DB_USER=parking_user
+      - DB_PASSWORD=parking_pass
     depends_on:
+      postgres-parking:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
@@ -76,6 +102,25 @@ services:
         condition: service_started
     networks:
       - parking-network
+
+  postgres-vehicle:
+    image: postgres:15-alpine
+    container_name: postgres-vehicle
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_DB: vehicledb
+      POSTGRES_USER: vehicle_user
+      POSTGRES_PASSWORD: vehicle_pass
+    volumes:
+      - vehicle-data:/var/lib/postgresql/data
+    networks:
+      - parking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vehicle_user -d vehicledb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   vehicle-service:
     build:
@@ -87,8 +132,15 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
+      - DB_HOST=postgres-vehicle
+      - DB_PORT=5432
+      - DB_USER=vehicle_user
+      - DB_PASSWORD=vehicle_pass
     depends_on:
+      postgres-vehicle:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
@@ -97,6 +149,25 @@ services:
         condition: service_started
     networks:
       - parking-network
+
+  postgres-reservation:
+    image: postgres:15-alpine
+    container_name: postgres-reservation
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: reservationdb
+      POSTGRES_USER: reservation_user
+      POSTGRES_PASSWORD: reservation_pass
+    volumes:
+      - reservation-data:/var/lib/postgresql/data
+    networks:
+      - parking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reservation_user -d reservationdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   reservation-service:
     build:
@@ -108,8 +179,15 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
+      - DB_HOST=postgres-reservation
+      - DB_PORT=5432
+      - DB_USER=reservation_user
+      - DB_PASSWORD=reservation_pass
     depends_on:
+      postgres-reservation:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
@@ -129,11 +207,12 @@ services:
       dockerfile: Dockerfile.fast
     container_name: api-gateway
     ports:
-      - "8090:8080"
+      - "8090:8090"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_AUTHORIZATIONSERVER_ISSUER=http://auth-server:9000
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://auth-server:9000
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -153,3 +232,8 @@ services:
 networks:
   parking-network:
     driver: bridge
+
+volumes:
+  parking-data:
+  vehicle-data:
+  reservation-data:

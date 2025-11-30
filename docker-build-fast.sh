@@ -34,10 +34,13 @@ fi
 echo ""
 echo "📝 Шаг 2/3: Создание оптимизированных Dockerfiles..."
 
+# Определяем платформу (для Apple Silicon - arm64, для деплоя - amd64)
+PLATFORM="${PLATFORM:-linux/arm64}"
+
 for service in eureka-server config-server auth-server api-gateway parking-service vehicle-service reservation-service; do
     cat > "$service/Dockerfile.fast" << EOF
 # Быстрый Dockerfile - использует локально собранный JAR
-FROM --platform=linux/amd64 eclipse-temurin:17-jre
+FROM --platform=$PLATFORM eclipse-temurin:17-jre
 
 WORKDIR /app
 
@@ -56,6 +59,58 @@ echo "📝 Создание docker-compose-fast.yml..."
 
 cat > docker-compose-fast.yml << 'EOF'
 services:
+  # PostgreSQL базы данных
+  postgres-parking:
+    image: postgres:15-alpine
+    container_name: postgres-parking
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: parkingdb
+      POSTGRES_USER: parking_user
+      POSTGRES_PASSWORD: parking_pass
+    networks:
+      - parking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parking_user -d parkingdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-vehicle:
+    image: postgres:15-alpine
+    container_name: postgres-vehicle
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_DB: vehicledb
+      POSTGRES_USER: vehicle_user
+      POSTGRES_PASSWORD: vehicle_pass
+    networks:
+      - parking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vehicle_user -d vehicledb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-reservation:
+    image: postgres:15-alpine
+    container_name: postgres-reservation
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: reservationdb
+      POSTGRES_USER: reservation_user
+      POSTGRES_PASSWORD: reservation_pass
+    networks:
+      - parking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reservation_user -d reservationdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   eureka-server:
     build:
       context: ./eureka-server
@@ -124,7 +179,13 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - DB_HOST=postgres-parking
+      - DB_PORT=5432
+      - DB_USER=parking_user
+      - DB_PASSWORD=parking_pass
     depends_on:
+      postgres-parking:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
@@ -145,7 +206,13 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - DB_HOST=postgres-vehicle
+      - DB_PORT=5432
+      - DB_USER=vehicle_user
+      - DB_PASSWORD=vehicle_pass
     depends_on:
+      postgres-vehicle:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
@@ -166,7 +233,13 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://auth-server:9000
+      - DB_HOST=postgres-reservation
+      - DB_PORT=5432
+      - DB_USER=reservation_user
+      - DB_PASSWORD=reservation_pass
     depends_on:
+      postgres-reservation:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       config-server:
@@ -186,7 +259,7 @@ services:
       dockerfile: Dockerfile.fast
     container_name: api-gateway
     ports:
-      - "8090:8080"
+      - "8090:8090"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888

@@ -18,6 +18,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
   # PostgreSQL Database for Vehicle Service
   postgres-vehicle:
     image: postgres:15-alpine
@@ -37,6 +46,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
   # PostgreSQL Database for Reservation Service
   postgres-reservation:
     image: postgres:15-alpine
@@ -56,15 +74,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
   eureka-server:
-    build:
-      context: .
-      dockerfile: eureka-server/Dockerfile
+    image: ${DOCKER_USER:-your-username}/eureka-server:${VERSION:-latest}
     container_name: eureka-server
     ports:
       - "8761:8761"
-    environment:
-      - JAVA_OPTS=-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100
     networks:
       - parking-network
     healthcheck:
@@ -73,10 +96,17 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
   config-server:
-    build:
-      context: .
-      dockerfile: config-server/Dockerfile
+    image: ${DOCKER_USER:-your-username}/config-server:${VERSION:-latest}
     container_name: config-server
     ports:
       - "8888:8888"
@@ -93,10 +123,19 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    volumes:
+      - ./config-repo:/config-repo
+
   auth-server:
-    build:
-      context: .
-      dockerfile: auth-server/Dockerfile
+    image: ${DOCKER_USER:-your-username}/auth-server:${VERSION:-latest}
     container_name: auth-server
     ports:
       - "9000:9000"
@@ -110,17 +149,23 @@ services:
         condition: service_healthy
     networks:
       - parking-network
-    # healthcheck временно отключен
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/actuator/health"]
-    #   interval: 15s
-    #   timeout: 5s
-    #   retries: 5
-    #   start_period: 60s
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
   parking-service:
-    build:
-      context: .
-      dockerfile: parking-service/Dockerfile
+    image: ${DOCKER_USER:-your-username}/parking-service:${VERSION:-latest}
     container_name: parking-service
     ports:
       - "8081:8081"
@@ -139,7 +184,7 @@ services:
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
     networks:
       - parking-network
     healthcheck:
@@ -148,10 +193,17 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
   vehicle-service:
-    build:
-      context: .
-      dockerfile: vehicle-service/Dockerfile
+    image: ${DOCKER_USER:-your-username}/vehicle-service:${VERSION:-latest}
     container_name: vehicle-service
     ports:
       - "8082:8082"
@@ -170,7 +222,7 @@ services:
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
     networks:
       - parking-network
     healthcheck:
@@ -179,10 +231,17 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
   reservation-service:
-    build:
-      context: .
-      dockerfile: reservation-service/Dockerfile
+    image: ${DOCKER_USER:-your-username}/reservation-service:${VERSION:-latest}
     container_name: reservation-service
     ports:
       - "8083:8083"
@@ -201,7 +260,7 @@ services:
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
       parking-service:
         condition: service_healthy
       vehicle-service:
@@ -214,10 +273,17 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
   api-gateway:
-    build:
-      context: .
-      dockerfile: api-gateway/Dockerfile
+    image: ${DOCKER_USER:-your-username}/api-gateway:${VERSION:-latest}
     container_name: api-gateway
     ports:
       - "8090:8090"
@@ -231,7 +297,7 @@ services:
       config-server:
         condition: service_healthy
       auth-server:
-        condition: service_started
+        condition: service_healthy
       parking-service:
         condition: service_healthy
       vehicle-service:
@@ -246,6 +312,15 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
 networks:
   parking-network:
     driver: bridge
@@ -254,3 +329,4 @@ volumes:
   parking-data:
   vehicle-data:
   reservation-data:
+
